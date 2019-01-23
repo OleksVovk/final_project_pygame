@@ -1,1 +1,1 @@
-# finam_project_pygame
+# final_project_pygame
