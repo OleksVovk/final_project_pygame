@@ -1,0 +1,16 @@
+
+
+
+1. Sprawdzanie mozliwosci bibliotek
+
+2. Fabula/skrypt
+
+2. Zrobic main menu
+
+3. Dodac/napisac muzyke
+
+4. Sprity i teksturki
+
+5. Animacja (?)
+
+
