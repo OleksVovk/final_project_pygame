@@ -4,8 +4,8 @@ import pygame
 pygame.init()
 
 # MUSIC
-# pygame.mixer.music.load('Main_theme.wav')
-# pygame.mixer.music.play(-1)
+pygame.mixer.music.load('sounds/Main_theme.wav')
+pygame.mixer.music.play(-1)
 
 display_width = 1275
 display_height = 750
@@ -13,28 +13,25 @@ display_height = 750
 black = (0, 0, 0)
 
 win = pygame.display.set_mode((display_width, display_height))
-# full screen: ((1275, 750))
 
 pygame.display.set_caption("Vanishing of Hao Melnik")
 
-introImg = pygame.image.load('pygame-badge-SMA.png')
 
 # INTRO SCREEN
-
-
-def intro(x, y):
-    win.blit(introImg, (x, y))
-
-
-x = (display_width * 0.18)
-y = (display_height * 0.15)
-
-win.fill(black)
-intro(x, y)
-
+introImg = pygame.image.load('images/pygame-badge-SMA.png')
 died = False
 
 while not died:
+
+    def intro(x, y):
+        win.blit(introImg, (x, y))
+
+
+    x = (display_width * 0.18)
+    y = (display_height * 0.15)
+
+    win.fill(black)
+    intro(x, y)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
