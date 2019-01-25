@@ -1,4 +1,4 @@
-from random import randint
+import webbrowser
 
 import pygame
 pygame.init()
@@ -6,15 +6,19 @@ pygame.init()
 # MUSIC
 pygame.mixer.music.load('sounds/Main_theme.wav')
 pygame.mixer.music.play(-1)
+arrowSound = pygame.mixer.Sound('sounds/usp2.wav')
+
 
 display_width = 900     # 1275 - full screen
 display_height = 770    # 750 - full screen
 
 win = pygame.display.set_mode((display_width, display_height))
 
-pygame.display.set_caption("Vanishing of Hao Melnik")
+pygame.display.set_caption("Liwko's  adventure")
 
 time = pygame.time.Clock()
+
+score = 0
 
 walkRight = [pygame.image.load('sprites/R1.png'),
              pygame.image.load('sprites/R2.png'),
@@ -37,6 +41,7 @@ char = [pygame.image.load('sprites/standing1.png'),
         pygame.image.load('sprites/standing3.png'),
         pygame.image.load('sprites/standing4.png')]
 
+
 # MAIM CHARACTER
 
 
@@ -46,37 +51,37 @@ class Character(object):
         self.y = y
         self.width = width
         self.height = height
-        self.velocity = 10
+        self.velocity = 6
         self.Jump = False
         self.count = 10
         self.left = False
         self.right = False
         self.walk = 0
-        self.stand = 1
+        self.stand = True
         self.hitbox = (self.x + 26, self.y, 28, 30)
 
     def display(self, win):
         if self.walk + 1 >= 25:
             self.walk = 0
 
-        if self.left:
-            win.blit(walkLeft[self.walk // 6], (self.x, self.y))
-            self.walk += 1
+        if not self.stand:
+            if self.left:
+                win.blit(walkLeft[self.walk // 5], (self.x, self.y))
+                self.walk += 1
 
-        elif self.right:
-            win.blit(walkRight[self.walk // 6], (self.x, self.y))
-            self.walk += 1
+            elif self.right:
+                win.blit(walkRight[self.walk // 5], (self.x, self.y))
+                self.walk += 1
 
         else:
             print(self.stand)
-            win.blit(char[self.stand // 2], (self.x, self.y))
-            if self.stand == 6:
-                self.stand = 0
+            if self.right:
+                win.blit(walkRight[0], (self.x, self.y))
             else:
-                self.stand += 1
+                win.blit(walkLeft[0], (self.x, self.y))
 
         self.hitbox = (self.x + 26, self.y, 28, 80)
-        pygame.draw.rect(win, (255, 0, 0), self.hitbox, 2)
+        # pygame.draw.rect(win, (255, 0, 0), self.hitbox, 2)
 
 # SHOOTING
 
@@ -124,25 +129,29 @@ class Villain(object):
         self.height = height
         self.end = end
         self.count = 0
-        self.velocity = 3
+        self.velocity = 5
         self.path = [self.x, self.end]
-        self.hitbox = (self.x + 70, self.y + 50, 50, 80)
-
+        self.hitbox = (self.x + 20, self.y - 50, 50, 80)
+        self.healthbar = 13
+        self.visible = True
 
     def display(self, win):
         self.move()
-        if self.count + 1 >= 25:
-            self.count = 0
+        if self.visible:
+            if self.count + 1 >= 20:
+                self.count = 0
 
-        if self.velocity > 0:
-            win.blit(self.animationRight[self.count //3], (self.x, self.y))
-            self.count += 1
-        else:
-            win.blit(self.animationLeft[self.count // 3], (self.x, self.y))
-            self.count += 1
+            if self.velocity > 0:
+                win.blit(self.animationRight[self.count // 4], (self.x, self.y))
+                self.count += 1
+            else:
+                win.blit(self.animationLeft[self.count // 4], (self.x, self.y))
+                self.count += 1
 
-        self.hitbox = (self.x + 10, self.y - 50, 100, 100)
-        pygame.draw.rect(win, (255, 0, 0), self.hitbox, 2)
+            pygame.draw.rect(win, (255, 0, 0), (self.hitbox[0], self.hitbox[1] + 40, 50, 10))
+            pygame.draw.rect(win, (0, 240, 0), (self.hitbox[0], self.hitbox[1] + 40, 50 - (5 * (10 - self.healthbar)), 10))
+            self.hitbox = (self.x + 45, self.y - 50, 50, 50)
+            # pygame.draw.rect(win, (255, 0, 0), self.hitbox, 2)
 
     def move(self):
         if self.velocity > 0:
@@ -159,25 +168,38 @@ class Villain(object):
                 self.count = 0
 
     def hit(self):
+        if self.healthbar > 0:
+            self.healthbar -= 1
+        else:
+            self.visible = False
         print('HIT')
 
 
 def win_update():
     win.blit(bg, (0, 0))
+    text = letters.render("You've reached: " + str(score), 1, (255, 255, 255))
+    win.blit(text, (590, 10))
     knight.display(win)
     enemy.display(win)
-    for arrow in arrows:
-        arrow.display(win)
+    for i in arrows:
+        i.display(win)
 
     pygame.display.update()
 
 
 knight = Character(450, 650, 50, 50)
 enemy = Villain(10, 680, 50, 50, 800)
+letters = pygame.font.SysFont('helvetice', 40, True)
 arrows = []
+shootRegister = 0
 run = True
 while run:
     time.tick(25)
+
+    if shootRegister > 0:
+        shootRegister += 1
+    if shootRegister > 2:
+        shootRegister = 0
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -188,9 +210,13 @@ while run:
         if arrow.y - arrow.radius < enemy.hitbox[1] + enemy.hitbox[3] and arrow.y + arrow.radius > enemy.hitbox[1]:
             if arrow.x + arrow.radius > enemy.hitbox[0] and arrow.x - arrow.radius < enemy.hitbox[1] + enemy.hitbox[2]:
                 enemy.hit()
+                score += 1
+                if score == 100:
+                    pygame.mixer.music.stop()
+                    webbrowser.open("https://youtu.be/-FQIqIiABoU?t=36")
                 arrows.pop(arrows.index(arrow))
 
-        if arrow.x < 700 and arrow.x > 0:
+        if arrow.x < 900 and arrow.x > 0:
             arrow.x += arrow.velocity
         else:
             arrows.pop(arrows.index(arrow))
@@ -199,28 +225,31 @@ while run:
 
 # MOVEMENT
 
-    if keys[pygame.K_SPACE]:
+    if keys[pygame.K_SPACE] and shootRegister == 0:
+        arrowSound.play()
         if knight.left:
-            facing = -3
+            facing = -1
         else:
-            facing = 0
-        if len(arrows) < 4:
+            facing = 1
+
+        if len(arrows) < 3:
             arrows.append(Bullet(round(knight.x + knight.width // 2),
-                                 round(knight.y + knight.height // 2), 6, (0, 0, 0), facing))
+                                 round(knight.y + knight.height // 2), 6, (220, 20, 60), facing))
+
+        shootRegister = 1
 
     if keys[pygame.K_LEFT] and knight.x > knight.velocity:
         knight.x -= knight.velocity
         knight.left = True
         knight.right = False
-
+        knight.stand = False
     elif keys[pygame.K_RIGHT] and knight.x < 900 - knight.width - knight.velocity:
         knight.x += knight.velocity
         knight.right = True
         knight.left = False
-
+        knight.stand = False
     else:
-        knight.right = False
-        knight.left = False
+        knight.stand = True
         knight.walk = 0
 
 # JUMPING
@@ -235,7 +264,7 @@ while run:
             down = 1
             if knight.count < 0:
                 down = -1
-            knight.y -= (knight.count ** 2) * 0.2 * down
+            knight.y -= (knight.count ** 2) * 0.3 * down
             knight.count -= 1
         else:
             knight.Jump = False
