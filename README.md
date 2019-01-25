@@ -5,6 +5,6 @@ Assets used:
 
  - background: Eder Muniz
  
- - character: Warren Clark 
+ - characters: Warren Clark 
  
  
